@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  membersApproved Member[] @relation("ApprovedBy")
+  activityLogs    ActivityLog[]
+
+
+  posts Post[]
+
+  @@map("admins")
+}
+
+
+model Member {
+  id                Int           @id @default(autoincrement())
+  //fullName          String        @map("full_name")
+  firstName         String        @map("first_name")
+  secondName        String        @map("second_name")
+  thirdName         String        @map("third_name")
+  lastName          String        @map("last_name")
+  nationalId        String        @unique @map("national_id")
+  dateOfBirth       DateTime      @map("date_of_birth")
+  city              String
+  education         EducationLevel @map("education")
+  phone             String
+  email             String
+  specialty         String
+  membershipType    MembershipType @map("membership_type")
+  personalPhoto     String?       @map("personal_photo")
+  idDocument        String?       @map("id_document")
+  status            MemberStatus  @default(PENDING)
+  registeredAt      DateTime      @default(now()) @map("registered_at")
+  approvedAt        DateTime?     @map("approved_at")
+
+
+  approvedById      Int?          @map("approved_by_id")
+  approvedBy        Admin?        @relation("ApprovedBy", fields: [approvedById], references: [id])
+
+  @@map("members")
+}
+
+enum EducationLevel {
+  PRIMARY
+  PREPARATORY
+  SECONDARY
+  BACHELOR
+  MASTER
+  PHD
+  VOCATIONAL
+}
+
+enum MembershipType {
+  ACTIVE
+  VOLUNTEER
+  SUPPORTER
+}
+
+enum MemberStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  excerpt     String?
+  featuredImage String? @map("featured_image")
+  
+  publishedAt DateTime @default(now()) @map("published_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  isFeatured  Boolean  @default(false) @map("is_featured")
+  status      PostStatus @default(DRAFT)
+
+  authorId Int? @map("author_id")
+  author   Admin? @relation(fields: [authorId], references: [id])
+
+  categoryId  Int      @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id])
+  
+  @@map("posts")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  slug  String @unique
+  posts Post[]
+
+  @@map("categories")
+}
+
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+ 
+  action    String
+  entityType String? @map("entity_type")
+  entityId  Int?     @map("entity_id")
+  details   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  adminId   Int      @map("admin_id")
+  admin     Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("activity_logs")
+}
