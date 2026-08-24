@@ -16,3 +16,16 @@ export async function saveFile(file: File, folder: string): Promise<string> {
 
   return `/uploads/${folder}/${fileName}`;
 }
+
+// Self-executing runner for local testing
+async function testUpload() {
+  try {
+    const mockFile = new File(['Hello, world!'], 'hello.txt', { type: 'text/plain' });
+    const resultPath = await saveFile(mockFile, 'test');
+    console.log(`File saved successfully! Virtual Path: ${resultPath}`);
+  } catch (err) {
+    console.error('Upload test failed:', err);
+  }
+}
+
+testUpload();
