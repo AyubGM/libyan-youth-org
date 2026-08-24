@@ -11,6 +11,9 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
+
+    // 1. Extract raw form fields safely
+    
     const raw = {
       firstName: formData.get("firstName") as string,
       secondName: formData.get("secondName") as string,
@@ -43,10 +46,18 @@ export async function POST(request: NextRequest) {
     const personalPhoto = formData.get("personalPhoto") as File | null;
     const idDocument = formData.get("idDocument") as File | null;
 
+    // 4. Validate raw inputs + dates
+    const parsedData = memberRegisterSchema.parse({
+      ...raw,
+      dateOfBirth: new Date(raw.dateOfBirth),
+      personalPhoto: personalPhoto ? 'pending_upload' : '',
+      idDocument: idDocument ? 'pending_upload' : '',
+    });
+
+   // 5. Save files ONLY after Zod validation succeeds
     let personalPhotoPath = "";
     let idDocumentPath = "";
 
-    // 4. Save files AFTER checking duplicates
     if (personalPhoto && personalPhoto.size > 0) {
       personalPhotoPath = await saveFile(personalPhoto, "photos");
     }
@@ -54,15 +65,12 @@ export async function POST(request: NextRequest) {
       idDocumentPath = await saveFile(idDocument, "documents");
     }
 
-    // 5. Parse schema with final file paths
-    const data = memberRegisterSchema.parse({
-      ...raw,
-      personalPhoto: personalPhotoPath,
-      idDocument: idDocumentPath,
-      dateOfBirth: new Date(raw.dateOfBirth as string),
-    });
-
-    const member = await prisma.member.create({ data });
+    
+    const member = await prisma.member.create({ data: {
+        ...parsedData,
+        personalPhoto: personalPhotoPath,
+        idDocument: idDocumentPath,
+    } });
 
     try {
       await sendEmail({
