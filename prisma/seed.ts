@@ -1,15 +1,20 @@
-import { prisma } from '@/lib/prisma';
-import { hash } from 'bcryptjs';
-
+import { prisma } from "@/lib/prisma";
+import { hash } from "bcryptjs";
 
 async function main() {
-  const email = process.env.ADMIN_SEED_EMAIL as string;
-  const password = process.env.ADMIN_SEED_PASSWORD as string;
-  const name = process.env.ADMIN_SEED_NAME as string;
+  const email = process.env.ADMIN_SEED_EMAIL;
+  const password = process.env.ADMIN_SEED_PASSWORD;
+  const name = process.env.ADMIN_SEED_NAME;
+
+  if (!email || !password || !name) {
+    throw new Error(
+      "Missing required seed environment variables (ADMIN_SEED_EMAIL, ADMIN_SEED_PASSWORD, ADMIN_SEED_NAME).",
+    );
+  }
 
   const existing = await prisma.admin.findUnique({ where: { email } });
   if (existing) {
-    console.log('Admin already exists.');
+    console.log("Admin already exists.");
     return;
   }
 
@@ -20,7 +25,7 @@ async function main() {
   });
 
   console.log(`Admin created: ${email}`);
-  console.log('Change the default password after first login.');
+  console.log("Change the default password after first login.");
 }
 
 main()
