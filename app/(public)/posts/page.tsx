@@ -50,7 +50,7 @@ export default function Posts() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
 
   /* Debounce search input so we don't hammer the API */
